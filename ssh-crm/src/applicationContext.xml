@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd ">
+
+	<context:property-placeholder location="classpath:db.properties" />
+	
+	
+	
+	<!-- action配置 -->
+	<bean name="userAction" class="com.jsako.crm.web.action.UserAction"
+		scope="prototype">
+		<property name="userService" ref="userService"></property>
+	</bean>
+	
+	<bean name="customerAction" class="com.jsako.crm.web.action.CustomerAction"
+		scope="prototype">
+		<property name="customerService" ref="customerService"></property>
+	</bean>
+	
+	<bean name="baseDictAction" class="com.jsako.crm.web.action.BaseDictAction"
+		scope="prototype">
+		<property name="baseDictService" ref="baseDictService"></property>
+	</bean>
+	
+	<bean name="linkmanAction" class="com.jsako.crm.web.action.LinkmanAction"
+		scope="prototype">
+		<property name="linkmanService" ref="linkmanService"></property>
+	</bean>
+	
+	<bean name="saleVisitAction" class="com.jsako.crm.web.action.SaleVisitAction"
+		scope="prototype">
+		<property name="saleVisitService" ref="saleVisitService"></property>
+	</bean>
+	
+
+	<!-- service配置 -->
+	<bean name="userService" class="com.jsako.crm.service.impl.UserServiceImpl">
+		<property name="userDao" ref="userDao"></property>
+	</bean>
+
+	<bean name="customerService" class="com.jsako.crm.service.impl.CustomerServiceImpl">
+		<property name="customerDao" ref="customerDao"></property>
+	</bean>
+
+	<bean name="linkmanService" class="com.jsako.crm.service.impl.LinkmanServiceImpl">
+		<property name="customerDao" ref="customerDao"></property>
+		<property name="linkmanDao" ref="linkmanDao"></property>
+	</bean>
+	
+	<bean name="baseDictService" class="com.jsako.crm.service.impl.BaseDictServiceImpl">
+		<property name="baseDictDao" ref="baseDictDao"></property>
+	</bean>
+	
+	<bean name="saleVisitService" class="com.jsako.crm.service.impl.SaleVisitServiceImpl">
+		<property name="saleVisitDao" ref="saleVisitDao"></property>
+	</bean>
+
+
+	<!-- dao配置 -->
+	<bean name="userDao" class="com.jsako.crm.dao.impl.UserDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<bean name="customerDao" class="com.jsako.crm.dao.impl.CustomerDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	<bean name="linkmanDao" class="com.jsako.crm.dao.impl.LinkmanDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	<bean name="baseDictDao" class="com.jsako.crm.dao.impl.BaseDictDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	<bean name="saleVisitDao" class="com.jsako.crm.dao.impl.SaleVisitDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<!-- 将SessionFactory配置到容器中 -->
+	<!-- 加载配置方案 方案一:仍然使用外部文件的hibernate.cfg.xml配置信息 <bean name="sessionFactory" 
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean"> <property 
+		name="configLocation" value="classpath:hibernate.cfg.xml"> </property> </bean> 
+		方案二:在spring文件中利用property属性配置hibernate配置信息 -->
+	<bean name="sessionFactory"
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<!-- 配置一些必要属性 -->
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.format_sql">true</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+		<!-- 配置实体类映射文件路径 -->
+		<property name="mappingDirectoryLocations" value="classpath:com/jsako/crm/domain" />
+		<!-- 将连接池注入到hibernate,hibernate会通过连接池获得连接 -->
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<bean name="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${jdbc.driverClass}"></property>
+		<property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+		<property name="user" value="${jdbc.user}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+	</bean>
+	
+	<!-- 配置事务 -->
+	<!-- 配置核心事务管理系 -->
+	<bean name="transactionManager"
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<aop:config>
+		<aop:pointcut
+			expression="execution(* com.jsako.crm.service.impl.*ServiceImpl.*(..))"
+			id="pointcut" />
+	</aop:config>
+</beans>
